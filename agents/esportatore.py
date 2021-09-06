@@ -1,10 +1,3 @@
-from agents.Camionista import *
-from agents.Consumatore import *
-from agents.Esportatore import *
-from agents.Magazziniere import *
-from agents.Persona import *
-from agents.Importatore import *
-from agents.Spacciatore import *
 import random
 
 class Esportatore:

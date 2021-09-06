@@ -1,7 +1,5 @@
-import simpy
-from agents import *
 from AgentHandler import *
-
+import simpy
 
 if __name__ == "__main__":
     agentHandler = AgentHandler()
@@ -9,8 +7,7 @@ if __name__ == "__main__":
     #print(agentHandler)
 
     # parametri
-    min_tel = 3  # minima durata telefonata voce
-    max_tel = 900  # massima durata telefonata voce
+
 
     # preparare intervalli analoghi per le altre classi
     sms_prob_risposta = 7  # 7 volte su 10
