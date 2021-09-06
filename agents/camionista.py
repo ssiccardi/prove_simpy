@@ -46,6 +46,8 @@ class Camionista:
                 self.call_someone(call_params[0], call_params[1], call_params[2])
                 yield self.env.timeout(call_params[1])
                 yield self.env.timeout(random.randint(self.min_interval_tel, self.max_interval_tel))
+            else:
+                yield self.env.timeout(random.randint(self.min_interval_tel, self.max_interval_tel))
 
     def call_someone(self, is_chiamata, duration, receiver):
         self.agentHandler.handle_call(self, receiver, is_chiamata, duration)

@@ -60,15 +60,12 @@ class Importatore:
         self.action = env.process(self.run())
 
     def run(self):
-
         while True:
             state = self.agentHandler.get_state()
             interval = random.randint(self.min_interval_tel, self.max_interval_tel)
-            print(interval)
             if state == States.TRATTATIVA:
                 call_params = self.agentHandler.get_call_param([self.esportatori])
                 self.call_someone(call_params[0], call_params[1], call_params[2])
-                pass
             else:
                 call_params = self.agentHandler.get_call_param(
                     [self.esportatori, self.importatori, self.magazzinieri, self.persone, self.spacciatori])

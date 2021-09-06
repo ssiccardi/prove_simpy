@@ -44,12 +44,12 @@ class AgentHandler:
                            n_consumatori=4, n_persone=2):
 
         self.camionisti = [Camionista(next(self.progressive_id), self) for i in range(n_camionisti)]
-        self.consumatori = [Consumatore(next(self.progressive_id)) for i in range(n_consumatori)]
+        self.consumatori = [Consumatore(next(self.progressive_id), self) for i in range(n_consumatori)]
         self.importatori = [Importatore(next(self.progressive_id), self) for i in range(n_importatori)]
-        self.magazzinieri = [Magazziniere(next(self.progressive_id)) for i in range(n_magazzinieri)]
-        self.esportatori = [Esportatore(next(self.progressive_id)) for i in range(n_esportatori)]
-        self.spacciatori = [Spacciatore(next(self.progressive_id)) for i in range(n_spacciatori)]
-        self.persone = [Persona(next(self.progressive_id)) for i in range(n_persone)]
+        self.magazzinieri = [Magazziniere(next(self.progressive_id), self) for i in range(n_magazzinieri)]
+        self.esportatori = [Esportatore(next(self.progressive_id), self) for i in range(n_esportatori)]
+        self.spacciatori = [Spacciatore(next(self.progressive_id), self) for i in range(n_spacciatori)]
+        self.persone = [Persona(next(self.progressive_id),self) for i in range(n_persone)]
 
         self.bind()
 
@@ -117,6 +117,20 @@ class AgentHandler:
         for camionista in self.camionisti:
             camionista.start_simulation(env)
 
+        for magazziniere in self.magazzinieri:
+            magazziniere.start_simulation(env)
+
+        for consumatore in self.consumatori:
+            consumatore.start_simulation(env)
+
+        for esportatore in self.esportatori:
+            esportatore.start_simulation(env)
+
+        for persona in self.persone:
+            persona.start_simulation(env)
+
+        for spacciatore in self.spacciatori:
+            spacciatore.start_simulation(env)
         env.run(until=duration)
 
     def register_event(self, sender, sender_interc, receiver, receiver_interc, timestamp, voice_or_sms, duration):
@@ -140,8 +154,8 @@ class AgentHandler:
         return -1
 
     def handle_call(self, sender, receiver, is_chiamata, duration, timestamp):
-        receiver_inter = "N" if ((isinstance(receiver, Consumatore) and receiver.is_controllato()) or isinstance(receiver,Camionista)) else "S"
-        sender_inter = "N" if ((isinstance(receiver, Consumatore) and receiver.is_controllato()) or isinstance(receiver,Camionista)) else "S"
+        receiver_inter = "N" if ((isinstance(receiver, Consumatore) and receiver.is_controllato()) or isinstance(receiver, Camionista) or isinstance(receiver, Esportatore) or isinstance(receiver, Persona)) else "S"
+        sender_inter = "N" if ((isinstance(sender, Consumatore) and sender.is_controllato()) or isinstance(sender, Camionista) or isinstance(sender, Esportatore) or isinstance(receiver, Persona)) else "S"
         if sender_inter == "N" and receiver_inter == "N":
             return
         print(type(sender), duration)
