@@ -56,8 +56,7 @@ class Esportatore:
 
                 causes1 = ["chiamata-importatore", "sms-importatore"]
                 if cause in causes1:
-                    call_params = self.agentHandler.get_call_param(
-                        [self.camionisti])
+                    call_params = self.agentHandler.get_call_param([self.camionisti])
                     self.call_someone(call_params[0], call_params[1], call_params[2])
                     yield self.env.timeout(call_params[1])
                 else:

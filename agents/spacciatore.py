@@ -10,9 +10,10 @@ class Spacciatore:
         self.magazziniere = None
         self.consumatori = []
         self.persone = []
-        self.qtadroga = random.randint(0, 3)
+        self.qtadroga = random.randint(1, 3)
         self.cella = random.randint(0, 7)
         self.agentHandler=agentHandler
+        self.min_droga = 1
 
     def __str__(self) -> str:
         return f"Sono uno Spacciatore con ID={self.id}\n" \
@@ -61,13 +62,18 @@ class Spacciatore:
                 id = ''.join(x for x in str(interrupt.cause) if x.isdigit())
 
                 causes1 = ["chiamata-consumatore", "sms-consumatore"]
-                causes2 = ["poca-droga"]
-                causes3 = ["magazziniere-poca-drog"]
                 if cause in causes1:
-                    pass
-                elif cause in causes2:
-                    pass
-                elif cause in causes3:
-                    pass
+                    prob_spostamento = bool(random.randint(0,4))
+                    if prob_spostamento:
+                        consumatore = self.agentHandler.get_agent_by_id(id)
+                        self.call_someone("S", 0, consumatore)
+                        self.qtadroga -=1
+                        if self.qtadroga < self.min_droga:
+                            self.cella = self.magazziniere.celladroga
+                            self.magazziniere.cella = self.magazziniere.celladroga
+                            droga = random.randint(1,5)
+                            self.qtadroga += droga
+                            self.magazziniere.qtadroga-=droga
+                            self.call_someone("S", 0, self.magazziniere)
                 else:
                     print(CRED + "Sono stato interrotto da qualcosa che non doveva interrompermi!" + CEND)

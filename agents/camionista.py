@@ -11,6 +11,8 @@ class Camionista:
         self.magazzinieri = []
         self.cella = random.randint(0, 7)
         self.agentHandler = agentHandler
+        self.last_moved = 0
+        self.waiting_time_to_move = 0
 
     def __str__(self) -> str:
         return f"Sono un Camionista con ID={self.id}\n" \
@@ -29,6 +31,9 @@ class Camionista:
 
         self.min_spostamento = 1800  # minimo intervallo fra spostamenti
         self.max_spostamento = 3600  # massimo intervallo fra spostamenti
+
+        self.waiting_time_to_move = random.randint(self.min_spostamento, self.max_spostamento)
+
 
     def get_id(self):
         return self.id
@@ -49,5 +54,18 @@ class Camionista:
             else:
                 yield self.env.timeout(random.randint(self.min_interval_tel, self.max_interval_tel))
 
+            if self.env.now > self.waiting_time_to_move + self.last_moved:
+                self.change_cella()
+
     def call_someone(self, is_chiamata, duration, receiver):
-        self.agentHandler.handle_call(self, receiver, is_chiamata, duration)
+        self.agentHandler.handle_call(self, receiver, is_chiamata, duration, self.env.now)
+
+
+    def change_cella(self):
+        self.waiting_time_to_move=random.randint(self.min_spostamento, self.max_spostamento)
+        self.last_moved = self.env.now
+        self.cella = random.choice(self.magazzinieri).get_cella()
+
+        call_params = self.agentHandler.get_call_param([self.importatori, self.esportatori, self.magazzinieri])
+        self.call_someone(call_params[0], call_params[1], call_params[2])
+        yield self.env.timeout(call_params[1])

@@ -5,7 +5,6 @@ from agents import States
 
 from agents import Consumatore
 
-
 CRED = '\033[91m'
 CEND = '\033[0m'
 
@@ -21,6 +20,8 @@ class Importatore:
         self.persone = []
         self.cella = random.randint(0, 7)
         self.agentHandler = agentHandler
+        self.last_moved = 0
+        self.waiting_time_to_move = 0
 
     def __str__(self) -> str:
         return f"Sono un Importatore con ID={self.id}\n" \
@@ -42,6 +43,7 @@ class Importatore:
 
         self.min_spostamento = 1800  # minimo intervallo fra spostamenti per importatori
         self.max_spostamento = 3600  # massimo intervallo fra spostamenti per importatori
+        self.waiting_time_to_move = random.randint(self.min_spostamento, self.max_spostamento)
 
     def __eq__(self, o: object) -> bool:
         if isinstance(o, Importatore):
@@ -66,18 +68,28 @@ class Importatore:
             if state == States.TRATTATIVA:
                 call_params = self.agentHandler.get_call_param([self.esportatori])
                 self.call_someone(call_params[0], call_params[1], call_params[2])
-            else:
+                try:
+                    yield self.env.timeout(call_params[1])
+                except:
+                    pass
+            elif state == States.NULLO:
                 call_params = self.agentHandler.get_call_param(
                     [self.esportatori, self.importatori, self.magazzinieri, self.persone, self.spacciatori])
-
                 self.call_someone(call_params[0], call_params[1], call_params[2])
-
+                try:
+                    yield self.env.timeout(call_params[1])
+                except:
+                    pass
+            if state != States.CARICO_IN_ARRIVO:
+                last_change = self.agentHandler.get_timestamp_last_state_change()
+                if self.env.now - last_change > 864:
+                    self.agentHandler.changeState(States.CARICO_IN_ARRIVO, self.env.now)
             try:
-                yield self.env.timeout(interval + call_params[1])
+                yield self.env.timeout(interval)
             except simpy.Interrupt as interrupt:
                 cause = ''.join(x for x in str(interrupt.cause) if not x.isdigit())
                 id = ''.join(x for x in str(interrupt.cause) if x.isdigit())
-                print(cause)
+                #print(cause)
                 causes1 = ["chiamata-spacciatore", "sms-spacciatore", "chiamata-magazziniere", "sms-magazziniere",
                            "chiamata-importatore", "sms-importatore"]
                 causes2 = ["chiamata-camionista", "sms-camionista"]
@@ -109,5 +121,13 @@ class Importatore:
                 else:
                     print(CRED + "Sono stato interrotto da qualcosa che non doveva interrompermi!" + CEND)
 
+            if self.env.now > self.waiting_time_to_move + self.last_moved:
+                self.change_cella()
+
     def call_someone(self, is_chiamata, duration, receiver):
         self.agentHandler.handle_call(self, receiver, is_chiamata, duration, self.env.now)
+
+    def change_cella(self):
+        self.waiting_time_to_move = random.randint(self.min_spostamento, self.max_spostamento)
+        self.last_moved = self.env.now
+        self.cella = random.randint(0, 7)

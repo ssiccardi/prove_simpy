@@ -14,6 +14,9 @@ class Magazziniere:
         self.cella = random.randint(0, 7)
         self.agentHandler = agentHandler
 
+        self.last_moved = 0
+        self.waiting_time_to_move = 0
+
     def __str__(self) -> str:
         return f"Sono un Magazziniere con ID={self.id}\n" \
                f"   Importatori: {[agent.get_id() for agent in self.importatori]}\n" \
@@ -63,6 +66,21 @@ class Magazziniere:
 
                 causes1 = ["chiamata-camionista", "sms-camionista"]
                 if cause in causes1:
-                    pass
+                    self.cella = self.celladroga
+                    camionista = self.agentHandler.get_agent_by_id(id)
+
+                    self.call_someone("S", 0, camionista)
+
                 else:
                     print(CRED + "Sono stato interrotto da qualcosa che non doveva interrompermi!" + CEND)
+
+            if self.env.now > self.waiting_time_to_move + self.last_moved:
+                self.change_cella()
+
+    def get_cella_magazzino(self):
+        return self.celladroga
+
+    def change_cella(self):
+        self.waiting_time_to_move = random.randint(self.min_spostamento, self.max_spostamento)
+        self.last_moved = self.env.now
+        self.cella = random.randint(0, 7)

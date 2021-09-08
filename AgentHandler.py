@@ -33,6 +33,14 @@ class AgentHandler:
         self.max_tel = 900  # massima durata telefonata voce
         self.sms_prob_risposta = 7  # 7 volte su 10
         self.state = States.NULLO
+        self.timestamp_last_state_change = 0
+
+    def get_timestamp_last_state_change(self):
+        return self.timestamp_last_state_change
+
+    def changeState(self, state, timestamp):
+        self.state = state
+        self.timestamp_last_state_change = timestamp
 
     def get_sms_probability(self):
         return self.sms_prob_risposta
@@ -137,12 +145,15 @@ class AgentHandler:
         print(timestamp, sender, sender_interc, receiver, receiver_interc, duration, voice_or_sms)
 
     def generate_sms_cascade(self, sender, sender_interc, receiver, receiver_interc, timestamp):
-        sms_number = random.randint(3, 9)
+        sms_number = random.randint(2, 6)
+        start_timestamp = timestamp
         for i in range(sms_number):
+            response_time = random.randint(0,900)
             if i % 2 == 0:
-                self.register_event(sender, sender_interc, receiver, receiver_interc, timestamp, "S", 0)
+                self.register_event(sender, sender_interc, receiver, receiver_interc, start_timestamp+response_time, "S", 0)
             else:
-                self.register_event(receiver, receiver_interc, sender, sender_interc, timestamp, "S", 0)
+                self.register_event(receiver, receiver_interc, sender, sender_interc, start_timestamp+response_time, "S", 0)
+            start_timestamp +=response_time
 
     def get_agent_by_id(self, id):
         agents_list = [self.camionisti, self.consumatori, self.esportatori, self.importatori, self.magazzinieri,
@@ -158,12 +169,57 @@ class AgentHandler:
         sender_inter = "N" if ((isinstance(sender, Consumatore) and sender.is_controllato()) or isinstance(sender, Camionista) or isinstance(sender, Esportatore) or isinstance(receiver, Persona)) else "S"
         if sender_inter == "N" and receiver_inter == "N":
             return
-        print(type(sender), duration)
+        if sender.get_id() == receiver.get_id():
+            return
+        #print(type(sender), duration)
         if is_chiamata:
             self.register_event(sender.get_id(), sender_inter, receiver.get_id(), receiver_inter, timestamp, "V",
                                 duration)
         else:
             self.generate_sms_cascade(sender.get_id(), sender_inter, receiver.get_id(), receiver_inter, timestamp)
+        self.innest_events(sender, receiver, is_chiamata)
+
+
+    def innest_events(self,sender, receiver, is_chiamata):
+        if isinstance(receiver, Esportatore):
+            if isinstance(receiver, Importatore):
+                if is_chiamata:
+                    receiver.action.interrupt( "chiamata-importatore" + str(sender.get_id()))
+                else:
+                    receiver.action.interrupt("sms-importatore" + str(sender.get_id()))
+        elif isinstance(receiver, Importatore):
+            if isinstance(receiver, Spacciatore):
+                if is_chiamata:
+                    receiver.action.interrupt("chiamata-spacciatore" + str(sender.get_id()))
+                else:
+                    receiver.action.interrupt("sms-spacciatore" + str(sender.get_id()))
+            if isinstance(receiver, Importatore):
+                if is_chiamata:
+                    receiver.action.interrupt("chiamata-importatore" + str(sender.get_id()))
+                else:
+                    receiver.action.interrupt("sms-importatore" + str(sender.get_id()))
+            if isinstance(receiver, Magazziniere):
+                if is_chiamata:
+                    receiver.action.interrupt("chiamata-magazziniere" + str(sender.get_id()))
+                else:
+                    receiver.action.interrupt("sms-magazziniere" + str(sender.get_id()))
+            if isinstance(receiver, Camionista):
+                if is_chiamata:
+                    receiver.action.interrupt("chiamata-camionista" + str(sender.get_id()))
+                else:
+                    receiver.action.interrupt("sms-camionista" + str(sender.get_id()))
+        elif isinstance(receiver, Magazziniere):
+            if isinstance(receiver, Camionista):
+                if is_chiamata:
+                    receiver.action.interrupt("chiamata-camionista" + str(sender.get_id()))
+                else:
+                    receiver.action.interrupt("sms-camionista" + str(sender.get_id()))
+        elif isinstance(receiver, Spacciatore):
+            if isinstance(receiver, Consumatore):
+                if is_chiamata:
+                    receiver.action.interrupt("chiamata-consumatore" + str(sender.get_id()))
+                else:
+                    receiver.action.interrupt("sms-consumatore" + str(sender.get_id()))
 
     def get_state(self):
         return self.state
