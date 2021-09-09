@@ -12,6 +12,12 @@ class Consumatore:
         self.cella = random.randint(0, 7)
         self.agentHandler=agentHandler
 
+    def doIKnowPersonX(self, id):
+        result = list(filter(lambda x: x.get_id() == id, self.persone))
+        result.append(list(filter(lambda x: x.get_id() == id, [self.spacciatore])))
+
+        return self.id if len(result) != 0 else -1
+
     def __str__(self) -> str:
         return f"Sono un Consumatore con ID={self.id}\n" \
                f"   Spacciatore: {self.spacciatore.get_id()}\n" \
@@ -22,15 +28,12 @@ class Consumatore:
     def enter_simulation_environment(self, spacciatore, persone):
         self.spacciatore = spacciatore
         self.persone = persone
-        self.min_interval_tel = 120  # minimo intervallo fra telefonate
-        self.max_interval_tel = 1800  # massimo intervallo fra telefonate
+        self.min_interval_tel = 518400  # minimo intervallo fra telefonate
+        self.max_interval_tel = 691200  # massimo intervallo fra telefonate
 
-        self.min_spostamento = 1800  # minimo intervallo fra spostamenti
-        self.max_spostamento = 3600  # massimo intervallo fra spostamenti
+        self.min_spostamento = 7200  # minimo intervallo fra spostamenti
+        self.max_spostamento = 32400  # massimo intervallo fra spostamenti
 
-    def doIKnowPersonX(self, id):
-        result = list(filter(lambda x: x.get_id() == id, self.persone))
-        return self.id if len(result) != 0 else -1
 
     def get_id(self):
         return self.id

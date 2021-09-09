@@ -9,5 +9,5 @@ if __name__ == "__main__":
 
 
     env = simpy.Environment()
-    agentHandler.start_simulation(env, 9000)
+    agentHandler.start_simulation(env, 31557600)
 

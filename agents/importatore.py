@@ -39,7 +39,7 @@ class Importatore:
         self.magazzinieri = magazzinieri
         self.persone = persone
         self.min_interval_tel = 120  # minimo intervallo fra telefonate per importatori
-        self.max_interval_tel = 1800  # massimo intervallo fra telefonate per importatori
+        self.max_interval_tel = 7200  # massimo intervallo fra telefonate per importatori
 
         self.min_spostamento = 1800  # minimo intervallo fra spostamenti per importatori
         self.max_spostamento = 3600  # massimo intervallo fra spostamenti per importatori
@@ -52,6 +52,11 @@ class Importatore:
 
     def doIKnowPersonX(self, id):
         result = list(filter(lambda x: x.get_id() == id, self.persone))
+        result.append(list(filter(lambda x: x.get_id() == id, self.esportatori)))
+        result.append(list(filter(lambda x: x.get_id() == id, self.spacciatori)))
+        result.append(list(filter(lambda x: x.get_id() == id, self.magazzinieri)))
+        result.append(list(filter(lambda x: x.get_id() == id, self.importatori)))
+
         return self.id if len(result) != 0 else -1
 
     def get_id(self):
@@ -84,6 +89,16 @@ class Importatore:
                 last_change = self.agentHandler.get_timestamp_last_state_change()
                 if self.env.now - last_change > 864:
                     self.agentHandler.changeState(States.CARICO_IN_ARRIVO, self.env.now)
+
+                    call_params = self.agentHandler.get_call_param([self.esportatori])
+                    self.call_someone(call_params[0], call_params[1], call_params[2])
+
+                    call_params = self.agentHandler.get_call_param([self.importatori])
+                    self.call_someone(call_params[0], call_params[1], call_params[2])
+
+                    call_params = self.agentHandler.get_call_param([self.magazzinieri])
+                    self.call_someone(call_params[0], call_params[1], call_params[2])
+
             try:
                 yield self.env.timeout(interval)
             except simpy.Interrupt as interrupt:

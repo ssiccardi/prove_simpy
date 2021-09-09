@@ -13,6 +13,7 @@ class Camionista:
         self.agentHandler = agentHandler
         self.last_moved = 0
         self.waiting_time_to_move = 0
+        self.qtadroga = random.randint(1, 3)
 
     def __str__(self) -> str:
         return f"Sono un Camionista con ID={self.id}\n" \
@@ -27,7 +28,7 @@ class Camionista:
         self.magazzinieri = magazzinieri
 
         self.min_interval_tel = 120  # minimo intervallo fra telefonate
-        self.max_interval_tel = 1800  # massimo intervallo fra telefonate
+        self.max_interval_tel = 7200  # massimo intervallo fra telefonate
 
         self.min_spostamento = 1800  # minimo intervallo fra spostamenti
         self.max_spostamento = 3600  # massimo intervallo fra spostamenti
@@ -60,12 +61,23 @@ class Camionista:
     def call_someone(self, is_chiamata, duration, receiver):
         self.agentHandler.handle_call(self, receiver, is_chiamata, duration, self.env.now)
 
+    def doIKnowPersonX(self, id):
+        result = list(filter(lambda x: x.get_id() == id, self.importatori))
+        result.append(list(filter(lambda x: x.get_id() == id, self.esportatori)))
+        result.append(list(filter(lambda x: x.get_id() == id, self.magazzinieri)))
+
+        return self.id if len(result) != 0 else -1
 
     def change_cella(self):
         self.waiting_time_to_move=random.randint(self.min_spostamento, self.max_spostamento)
         self.last_moved = self.env.now
-        self.cella = random.choice(self.magazzinieri).get_cella()
+        magazziniere = random.choice(self.magazzinieri)
+        self.cella = magazziniere.get_cella()
 
-        call_params = self.agentHandler.get_call_param([self.importatori, self.esportatori, self.magazzinieri])
-        self.call_someone(call_params[0], call_params[1], call_params[2])
+        call_params = self.agentHandler.get_call_param([])
+        self.call_someone(call_params[0], call_params[1], magazziniere)
+        droga_depositata = random.randint(1, self.qtadroga)
+        magazziniere.qtadroga += droga_depositata
         yield self.env.timeout(call_params[1])
+        if self.qtadroga == 0:
+            self.agentHandler.changeState(States.NULLO)

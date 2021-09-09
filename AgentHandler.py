@@ -1,6 +1,7 @@
 import itertools
 import random
 from Simulation import *
+import pandas as pd
 
 from agents import (Consumatore, Camionista, Esportatore, Importatore, Magazziniere, Persona, Spacciatore, States)
 
@@ -34,6 +35,7 @@ class AgentHandler:
         self.sms_prob_risposta = 7  # 7 volte su 10
         self.state = States.NULLO
         self.timestamp_last_state_change = 0
+        self.dataset = []
 
     def get_timestamp_last_state_change(self):
         return self.timestamp_last_state_change
@@ -51,13 +53,13 @@ class AgentHandler:
     def create_environment(self, n_camionisti=2, n_importatori=3, n_magazzinieri=2, n_esportatori=1, n_spacciatori=2,
                            n_consumatori=4, n_persone=2):
 
-        self.camionisti = [Camionista(next(self.progressive_id), self) for i in range(n_camionisti)]
-        self.consumatori = [Consumatore(next(self.progressive_id), self) for i in range(n_consumatori)]
-        self.importatori = [Importatore(next(self.progressive_id), self) for i in range(n_importatori)]
-        self.magazzinieri = [Magazziniere(next(self.progressive_id), self) for i in range(n_magazzinieri)]
-        self.esportatori = [Esportatore(next(self.progressive_id), self) for i in range(n_esportatori)]
-        self.spacciatori = [Spacciatore(next(self.progressive_id), self) for i in range(n_spacciatori)]
-        self.persone = [Persona(next(self.progressive_id),self) for i in range(n_persone)]
+        self.camionisti = [Camionista(next(self.progressive_id), self) for _ in range(n_camionisti)]
+        self.consumatori = [Consumatore(next(self.progressive_id), self) for _ in range(n_consumatori)]
+        self.importatori = [Importatore(next(self.progressive_id), self) for _ in range(n_importatori)]
+        self.magazzinieri = [Magazziniere(next(self.progressive_id), self) for _ in range(n_magazzinieri)]
+        self.esportatori = [Esportatore(next(self.progressive_id), self) for _ in range(n_esportatori)]
+        self.spacciatori = [Spacciatore(next(self.progressive_id), self) for _ in range(n_spacciatori)]
+        self.persone = [Persona(next(self.progressive_id), self) for _ in range(n_persone)]
 
         self.bind()
 
@@ -71,19 +73,48 @@ class AgentHandler:
             consumatore.enter_simulation_environment(random.choice(self.spacciatori), random.sample(self.persone, k=2))
 
         for esportatore in self.esportatori:
-            esportatore.enter_simulation_environment(self.camionisti, self.importatori)
+            esportatore_id = esportatore.get_id()
+            camionisti_per = list(filter(lambda x: x != -1,
+                                         [agent.doIKnowPersonX(esportatore_id) for agent in
+                                          self.camionisti]))
+            camionisti = list(filter(lambda agent: agent.get_id() in camionisti_per, self.camionisti))
+            esportatore.enter_simulation_environment(camionisti, self.importatori)
 
         for importatore in self.importatori:
-            importatore.enter_simulation_environment(self.importatori, self.esportatori, self.spacciatori,
+            importatore_id = importatore.get_id()
+            esportatori_per = list(filter(lambda x: x != -1,
+                                          [agent.doIKnowPersonX(importatore_id) for agent in
+                                           self.esportatori]))
+            esportatori = list(filter(lambda agent: agent.get_id() in esportatori_per, self.esportatori))
+
+            importatore.enter_simulation_environment(self.importatori, esportatori, self.spacciatori,
                                                      self.magazzinieri, random.sample(self.persone, k=2))
 
         for magazziniere in self.magazzinieri:
-            magazziniere.enter_simulation_environment(self.importatori, random.sample(self.spacciatori, k=1),
+            magazziniere_id = magazziniere.get_id()
+
+            importatori_per = list(filter(lambda x: x != -1,
+                                          [agent.doIKnowPersonX(magazziniere_id) for agent in
+                                           self.importatori]))
+            importatori = list(filter(lambda agent: agent.get_id() in importatori_per, self.importatori))
+
+            magazziniere.enter_simulation_environment(importatori, random.sample(self.spacciatori, k=1),
                                                       random.sample(self.persone, k=2))
 
         for spacciatore in self.spacciatori:
-            spacciatore.enter_simulation_environment(random.choice(self.magazzinieri),
-                                                     random.sample(self.consumatori, k=2),
+            spacciatore_id = spacciatore.get_id()
+            magazzinieri_per = list(filter(lambda x: x != -1,
+                                           [agent.doIKnowPersonX(spacciatore_id) for agent in
+                                            self.magazzinieri]))
+            magazzinieri = list(filter(lambda agent: agent.get_id() in magazzinieri_per, self.magazzinieri))
+
+            consumatori_per = list(filter(lambda x: x != -1,
+                                          [agent.doIKnowPersonX(spacciatore_id) for agent in
+                                           self.consumatori]))
+            consumatori = list(filter(lambda agent: agent.get_id() in consumatori_per, self.consumatori))
+
+            spacciatore.enter_simulation_environment(magazzinieri,
+                                                     consumatori,
                                                      random.sample(self.persone, k=2))
 
         for persona in self.persone:
@@ -140,20 +171,26 @@ class AgentHandler:
         for spacciatore in self.spacciatori:
             spacciatore.start_simulation(env)
         env.run(until=duration)
+        df = pd.DataFrame(self.dataset, columns=["timestamp", "mittente", "mittente_interc", "destinatario",
+                                                 "destinatario_interc", "durata", "tipo"])
+        df.to_csv("tabulato.csv", index=False)
 
     def register_event(self, sender, sender_interc, receiver, receiver_interc, timestamp, voice_or_sms, duration):
         print(timestamp, sender, sender_interc, receiver, receiver_interc, duration, voice_or_sms)
+        self.dataset.append((timestamp, sender, sender_interc, receiver, receiver_interc, duration, voice_or_sms))
 
     def generate_sms_cascade(self, sender, sender_interc, receiver, receiver_interc, timestamp):
         sms_number = random.randint(2, 6)
         start_timestamp = timestamp
         for i in range(sms_number):
-            response_time = random.randint(0,900)
+            response_time = random.randint(0, 900)
             if i % 2 == 0:
-                self.register_event(sender, sender_interc, receiver, receiver_interc, start_timestamp+response_time, "S", 0)
+                self.register_event(sender, sender_interc, receiver, receiver_interc, start_timestamp + response_time,
+                                    "S", 0)
             else:
-                self.register_event(receiver, receiver_interc, sender, sender_interc, start_timestamp+response_time, "S", 0)
-            start_timestamp +=response_time
+                self.register_event(receiver, receiver_interc, sender, sender_interc, start_timestamp + response_time,
+                                    "S", 0)
+            start_timestamp += response_time
 
     def get_agent_by_id(self, id):
         agents_list = [self.camionisti, self.consumatori, self.esportatori, self.importatori, self.magazzinieri,
@@ -165,13 +202,22 @@ class AgentHandler:
         return -1
 
     def handle_call(self, sender, receiver, is_chiamata, duration, timestamp):
-        receiver_inter = "N" if ((isinstance(receiver, Consumatore) and receiver.is_controllato()) or isinstance(receiver, Camionista) or isinstance(receiver, Esportatore) or isinstance(receiver, Persona)) else "S"
-        sender_inter = "N" if ((isinstance(sender, Consumatore) and sender.is_controllato()) or isinstance(sender, Camionista) or isinstance(sender, Esportatore) or isinstance(receiver, Persona)) else "S"
+        receiver_inter = "N" if (
+                (isinstance(receiver, Consumatore) and receiver.is_controllato()) or isinstance(receiver,
+                                                                                                Camionista) or isinstance(
+            receiver, Esportatore) or isinstance(receiver, Persona)) else "S"
+        sender_inter = "N" if ((isinstance(sender, Consumatore) and sender.is_controllato()) or isinstance(sender,
+                                                                                                           Camionista) or isinstance(
+            sender, Esportatore) or isinstance(receiver, Persona)) else "S"
         if sender_inter == "N" and receiver_inter == "N":
+            return
+        # print(receiver)
+
+        if isinstance(receiver, list):  # TODO: CAPIRE L'ERRORE
             return
         if sender.get_id() == receiver.get_id():
             return
-        #print(type(sender), duration)
+
         if is_chiamata:
             self.register_event(sender.get_id(), sender_inter, receiver.get_id(), receiver_inter, timestamp, "V",
                                 duration)
@@ -179,12 +225,11 @@ class AgentHandler:
             self.generate_sms_cascade(sender.get_id(), sender_inter, receiver.get_id(), receiver_inter, timestamp)
         self.innest_events(sender, receiver, is_chiamata)
 
-
-    def innest_events(self,sender, receiver, is_chiamata):
+    def innest_events(self, sender, receiver, is_chiamata):
         if isinstance(receiver, Esportatore):
             if isinstance(receiver, Importatore):
                 if is_chiamata:
-                    receiver.action.interrupt( "chiamata-importatore" + str(sender.get_id()))
+                    receiver.action.interrupt("chiamata-importatore" + str(sender.get_id()))
                 else:
                     receiver.action.interrupt("sms-importatore" + str(sender.get_id()))
         elif isinstance(receiver, Importatore):
@@ -226,9 +271,12 @@ class AgentHandler:
 
     def get_call_param(self, list_of_receivers):
         is_chiamata = bool(random.randint(0, self.get_sms_probability()))
-        if len(list_of_receivers)>0:
-            random_receiver_type = random.randint(0, len(list_of_receivers)-1)
+        if len(list_of_receivers) > 0:
+            random_receiver_type = random.randint(0, len(list_of_receivers) - 1)
+            while len(list_of_receivers[random_receiver_type]) == 0:
+                random_receiver_type = random.randint(0, len(list_of_receivers) - 1)
+
             receiver = random.choice(list_of_receivers[random_receiver_type])
         else:
             receiver = None
-        return (is_chiamata, self.get_random_tel_duration() if is_chiamata else 0, receiver)
+        return is_chiamata, self.get_random_tel_duration() if is_chiamata else 0, receiver

@@ -17,6 +17,13 @@ class Magazziniere:
         self.last_moved = 0
         self.waiting_time_to_move = 0
 
+    def doIKnowPersonX(self, id):
+        result = list(filter(lambda x: x.get_id() == id, self.importatori))
+        result.append(list(filter(lambda x: x.get_id() == id, self.spacciatori)))
+        result.append(list(filter(lambda x: x.get_id() == id, self.persone)))
+
+        return self.id if len(result) != 0 else -1
+
     def __str__(self) -> str:
         return f"Sono un Magazziniere con ID={self.id}\n" \
                f"   Importatori: {[agent.get_id() for agent in self.importatori]}\n" \
@@ -29,8 +36,8 @@ class Magazziniere:
         self.importatori = importatori
         self.spacciatori = spacciatori
         self.persone = persone
-        self.min_interval_tel = 120  # minimo intervallo fra telefonate
-        self.max_interval_tel = 1800  # massimo intervallo fra telefonate
+        self.min_interval_tel = 1200  # minimo intervallo fra telefonate
+        self.max_interval_tel = 7200  # massimo intervallo fra telefonate
 
         self.min_spostamento = 1800  # minimo intervallo fra spostamenti
         self.max_spostamento = 3600  # massimo intervallo fra spostamenti

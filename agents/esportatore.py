@@ -23,8 +23,8 @@ class Esportatore:
     def enter_simulation_environment(self, camionisti, importatori):
         self.camionisti = camionisti
         self.importatori = importatori
-        self.min_interval_tel = 120  # minimo intervallo fra telefonate
-        self.max_interval_tel = 1800  # massimo intervallo fra telefonate
+        self.min_interval_tel = 86400  # minimo intervallo fra telefonate
+        self.max_interval_tel = 432000  # massimo intervallo fra telefonate
 
         self.min_spostamento = 1800  # minimo intervallo fra spostamenti
         self.max_spostamento = 3600  # massimo intervallo fra spostamenti
@@ -61,3 +61,9 @@ class Esportatore:
                     yield self.env.timeout(call_params[1])
                 else:
                     print(CRED + "Sono stato interrotto da qualcosa che non doveva interrompermi!" + CEND)
+
+    def doIKnowPersonX(self, id):
+        result = list(filter(lambda x: x.get_id() == id, self.camionisti))
+        result.append(list(filter(lambda x: x.get_id() == id, self.importatori)))
+
+        return self.id if len(result) != 0 else -1
