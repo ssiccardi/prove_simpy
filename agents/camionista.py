@@ -47,6 +47,7 @@ class Camionista:
         while True:
             state = self.agentHandler.get_state()
 
+
             if state == States.CARICO_IN_ARRIVO:
                 call_params = self.agentHandler.get_call_param([self.importatori, self.esportatori, self.magazzinieri])
                 self.call_someone(call_params[0], call_params[1], call_params[2])
@@ -57,6 +58,9 @@ class Camionista:
 
             if self.env.now > self.waiting_time_to_move + self.last_moved:
                 self.change_cella()
+
+            if self.qtadroga <= 0:
+                self.agentHandler.changeState(States.NULLO)
 
     def call_someone(self, is_chiamata, duration, receiver):
         self.agentHandler.handle_call(self, receiver, is_chiamata, duration, self.env.now)
@@ -78,6 +82,6 @@ class Camionista:
         self.call_someone(call_params[0], call_params[1], magazziniere)
         droga_depositata = random.randint(1, self.qtadroga)
         magazziniere.qtadroga += droga_depositata
+        self.qtadroga-=droga_depositata
+
         yield self.env.timeout(call_params[1])
-        if self.qtadroga == 0:
-            self.agentHandler.changeState(States.NULLO)

@@ -36,11 +36,14 @@ class AgentHandler:
         self.state = States.NULLO
         self.timestamp_last_state_change = 0
         self.dataset = []
+        self.log = []
 
     def get_timestamp_last_state_change(self):
         return self.timestamp_last_state_change
 
     def changeState(self, state, timestamp):
+        self.log.append((timestamp, f"Cambio di stato: da {self.state} a {state}"))
+
         self.state = state
         self.timestamp_last_state_change = timestamp
 
@@ -50,8 +53,8 @@ class AgentHandler:
     def get_random_tel_duration(self):
         return random.randint(self.min_tel, self.max_tel)
 
-    def create_environment(self, n_camionisti=2, n_importatori=3, n_magazzinieri=2, n_esportatori=1, n_spacciatori=2,
-                           n_consumatori=4, n_persone=2):
+    def create_environment(self, n_camionisti=6, n_importatori=9, n_magazzinieri=6, n_esportatori=3, n_spacciatori=6,
+                           n_consumatori=12, n_persone=6):
 
         self.camionisti = [Camionista(next(self.progressive_id), self) for _ in range(n_camionisti)]
         self.consumatori = [Consumatore(next(self.progressive_id), self) for _ in range(n_consumatori)]
@@ -65,12 +68,12 @@ class AgentHandler:
 
     def bind(self):
         for camionista in self.camionisti:
-            camionista.enter_simulation_environment(random.sample(self.importatori, k=2),
-                                                    random.sample(self.esportatori, k=1),
+            camionista.enter_simulation_environment(random.sample(self.importatori, k=4),
+                                                    random.sample(self.esportatori, k=2),
                                                     self.magazzinieri)
 
         for consumatore in self.consumatori:
-            consumatore.enter_simulation_environment(random.choice(self.spacciatori), random.sample(self.persone, k=2))
+            consumatore.enter_simulation_environment(random.choice(self.spacciatori), random.sample(self.persone, k=4))
 
         for esportatore in self.esportatori:
             esportatore_id = esportatore.get_id()
@@ -88,7 +91,7 @@ class AgentHandler:
             esportatori = list(filter(lambda agent: agent.get_id() in esportatori_per, self.esportatori))
 
             importatore.enter_simulation_environment(self.importatori, esportatori, self.spacciatori,
-                                                     self.magazzinieri, random.sample(self.persone, k=2))
+                                                     self.magazzinieri, random.sample(self.persone, k=4))
 
         for magazziniere in self.magazzinieri:
             magazziniere_id = magazziniere.get_id()
@@ -98,8 +101,8 @@ class AgentHandler:
                                            self.importatori]))
             importatori = list(filter(lambda agent: agent.get_id() in importatori_per, self.importatori))
 
-            magazziniere.enter_simulation_environment(importatori, random.sample(self.spacciatori, k=1),
-                                                      random.sample(self.persone, k=2))
+            magazziniere.enter_simulation_environment(importatori, random.sample(self.spacciatori, k=2),
+                                                      random.sample(self.persone, k=4))
 
         for spacciatore in self.spacciatori:
             spacciatore_id = spacciatore.get_id()
@@ -115,7 +118,7 @@ class AgentHandler:
 
             spacciatore.enter_simulation_environment(magazzinieri,
                                                      consumatori,
-                                                     random.sample(self.persone, k=2))
+                                                     random.sample(self.persone, k=4))
 
         for persona in self.persone:
             id = persona.get_id()
@@ -170,10 +173,15 @@ class AgentHandler:
 
         for spacciatore in self.spacciatori:
             spacciatore.start_simulation(env)
+
         env.run(until=duration)
+
         df = pd.DataFrame(self.dataset, columns=["timestamp", "mittente", "mittente_interc", "destinatario",
                                                  "destinatario_interc", "durata", "tipo"])
         df.to_csv("tabulato.csv", index=False)
+
+        df = pd.DataFrame(self.log, columns=["timestamp", "evento"])
+        df.to_csv("log.csv", index=False)
 
     def register_event(self, sender, sender_interc, receiver, receiver_interc, timestamp, voice_or_sms, duration):
         print(timestamp, sender, sender_interc, receiver, receiver_interc, duration, voice_or_sms)

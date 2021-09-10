@@ -2,6 +2,8 @@ import random
 import simpy
 CRED = '\033[91m'
 CEND = '\033[0m'
+from agents import States
+
 class Magazziniere:
 
     def __init__(self, id, agentHandler):
@@ -60,6 +62,8 @@ class Magazziniere:
     def run(self):
         while True:
             state = self.agentHandler.get_state()
+            if self.qtadroga <=0:
+                self.agentHandler.changeState(States.TRATTATIVA, self.env.now)
 
             call_params = self.agentHandler.get_call_param(
                 [self.spacciatori, self.importatori, self.persone])
