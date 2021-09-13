@@ -42,10 +42,13 @@ class AgentHandler:
         return self.timestamp_last_state_change
 
     def changeState(self, state, timestamp):
-        self.log.append((timestamp, f"Cambio di stato: da {self.state} a {state}"))
-
-        self.state = state
+        if self.state != state:
+            self.log.append((timestamp, f"Cambio di stato: da {self.state} a {state}"))
+            self.state = state
         self.timestamp_last_state_change = timestamp
+
+    def register_log(self, timestamp, event):
+        self.log.append((timestamp,  event))
 
     def get_sms_probability(self):
         return self.sms_prob_risposta
@@ -182,6 +185,10 @@ class AgentHandler:
 
         df = pd.DataFrame(self.log, columns=["timestamp", "evento"])
         df.to_csv("log.csv", index=False)
+
+        text_file = open("agents.txt", "w")
+        n = text_file.write(str(self))
+        text_file.close()
 
     def register_event(self, sender, sender_interc, receiver, receiver_interc, timestamp, voice_or_sms, duration):
         print(timestamp, sender, sender_interc, receiver, receiver_interc, duration, voice_or_sms)

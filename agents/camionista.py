@@ -78,6 +78,8 @@ class Camionista:
         magazziniere = random.choice(self.magazzinieri)
         self.cella = magazziniere.get_cella()
 
+        self.agentHandler.register_log(self.env.now, f"Droga depositata dal camionista {self.get_id()} da {magazziniere.get_id()}" )
+
         call_params = self.agentHandler.get_call_param([])
         self.call_someone(call_params[0], call_params[1], magazziniere)
         droga_depositata = random.randint(1, self.qtadroga)

@@ -53,13 +53,15 @@ class Consumatore:
             if self.controllato:
 
                 call_params = self.agentHandler.get_call_param(
-                    [self.persone, [self.spacciatore]])
+                    [self.persone])
 
                 self.call_someone(call_params[0], call_params[1], call_params[2])
                 yield self.env.timeout(call_params[1])
 
+
             call_params = self.agentHandler.get_call_param([[self.spacciatore]])
             self.call_someone(call_params[0], call_params[1], call_params[2])
+            self.agentHandler.register_log(self.env.now, f"Consumatore con id {self.get_id()} ha acquistato da {call_params[2].get_id()}")
 
             try:
                 yield self.env.timeout(random.randint(self.min_interval_tel, self.max_interval_tel))

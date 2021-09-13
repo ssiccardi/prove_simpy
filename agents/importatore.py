@@ -71,40 +71,21 @@ class Importatore:
             state = self.agentHandler.get_state()
             interval = random.randint(self.min_interval_tel, self.max_interval_tel)
             if state == States.TRATTATIVA:
-                call_params = self.agentHandler.get_call_param([self.esportatori])
-                self.call_someone(call_params[0], call_params[1], call_params[2])
-                try:
-                    yield self.env.timeout(call_params[1])
-                except:
-                    pass
+                yield from self.call_a_esportatore()
             elif state == States.NULLO:
-                call_params = self.agentHandler.get_call_param(
-                    [self.esportatori, self.importatori, self.magazzinieri, self.persone, self.spacciatori])
-                self.call_someone(call_params[0], call_params[1], call_params[2])
-                try:
-                    yield self.env.timeout(call_params[1])
-                except:
-                    pass
-            if state != States.CARICO_IN_ARRIVO:
+                yield from self.call_anyone()
+
+            if state == States.TRATTATIVA:
                 last_change = self.agentHandler.get_timestamp_last_state_change()
                 if self.env.now - last_change > 864:
-                    self.agentHandler.changeState(States.CARICO_IN_ARRIVO, self.env.now)
-
-                    call_params = self.agentHandler.get_call_param([self.esportatori])
-                    self.call_someone(call_params[0], call_params[1], call_params[2])
-
-                    call_params = self.agentHandler.get_call_param([self.importatori])
-                    self.call_someone(call_params[0], call_params[1], call_params[2])
-
-                    call_params = self.agentHandler.get_call_param([self.magazzinieri])
-                    self.call_someone(call_params[0], call_params[1], call_params[2])
+                    self.handle_carico_in_arrivo()
 
             try:
                 yield self.env.timeout(interval)
             except simpy.Interrupt as interrupt:
                 cause = ''.join(x for x in str(interrupt.cause) if not x.isdigit())
                 id = ''.join(x for x in str(interrupt.cause) if x.isdigit())
-                #print(cause)
+
                 causes1 = ["chiamata-spacciatore", "sms-spacciatore", "chiamata-magazziniere", "sms-magazziniere",
                            "chiamata-importatore", "sms-importatore"]
                 causes2 = ["chiamata-camionista", "sms-camionista"]
@@ -118,8 +99,7 @@ class Importatore:
                         self.call_someone(call_params[0], call_params[1], call_params[2])
 
                 elif cause in causes2:
-                    # Quando riceve una telefonata o un sms da un camionista gli risponde (o lo richiama dopo un tempo casuale fra
-                    # T1 e T2) e poi chiama o manda sms a un importatore e a uno spacciatore
+
                     waiting = random.randint(self.min_interval_tel, self.max_interval_tel)
                     camionista = self.agentHandler.get_agent_by_id(id)
                     yield self.env.timeout(waiting)
@@ -138,6 +118,33 @@ class Importatore:
 
             if self.env.now > self.waiting_time_to_move + self.last_moved:
                 self.change_cella()
+
+    def handle_carico_in_arrivo(self):
+        self.agentHandler.changeState(States.CARICO_IN_ARRIVO, self.env.now)
+        call_params = self.agentHandler.get_call_param([self.esportatori])
+        self.call_someone(call_params[0], call_params[1], call_params[2])
+        call_params = self.agentHandler.get_call_param([self.importatori])
+        self.call_someone(call_params[0], call_params[1], call_params[2])
+        call_params = self.agentHandler.get_call_param([self.magazzinieri])
+        self.call_someone(call_params[0], call_params[1], call_params[2])
+        self.agentHandler.register_log(self.env.now, f"Importatore {self.get_id()} ha importato")
+
+    def call_anyone(self):
+        call_params = self.agentHandler.get_call_param(
+            [self.esportatori, self.importatori, self.magazzinieri, self.persone, self.spacciatori])
+        self.call_someone(call_params[0], call_params[1], call_params[2])
+        try:
+            yield self.env.timeout(call_params[1])
+        except:
+            pass
+
+    def call_a_esportatore(self):
+        call_params = self.agentHandler.get_call_param([self.esportatori])
+        self.call_someone(call_params[0], call_params[1], call_params[2])
+        try:
+            yield self.env.timeout(call_params[1])
+        except:
+            pass
 
     def call_someone(self, is_chiamata, duration, receiver):
         self.agentHandler.handle_call(self, receiver, is_chiamata, duration, self.env.now)

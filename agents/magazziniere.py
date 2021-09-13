@@ -61,7 +61,7 @@ class Magazziniere:
 
     def run(self):
         while True:
-            state = self.agentHandler.get_state()
+
             if self.qtadroga <=0:
                 self.agentHandler.changeState(States.TRATTATIVA, self.env.now)
 
