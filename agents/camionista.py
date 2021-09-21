@@ -35,7 +35,6 @@ class Camionista:
 
         self.waiting_time_to_move = random.randint(self.min_spostamento, self.max_spostamento)
 
-
     def get_id(self):
         return self.id
 
@@ -52,9 +51,9 @@ class Camionista:
                 call_params = self.agentHandler.get_call_param([self.importatori, self.esportatori, self.magazzinieri])
                 self.call_someone(call_params[0], call_params[1], call_params[2])
                 yield self.env.timeout(call_params[1])
-                yield self.env.timeout(random.randint(self.min_interval_tel, self.max_interval_tel))
+                yield self.env.timeout(int(random.randint(self.min_interval_tel**2, self.max_interval_tel**2)**0.5))
             else:
-                yield self.env.timeout(random.randint(self.min_interval_tel, self.max_interval_tel))
+                yield self.env.timeout(int(random.randint(self.min_interval_tel**2, self.max_interval_tel**2)**0.5))
 
             if self.env.now > self.waiting_time_to_move + self.last_moved:
                 self.change_cella()

@@ -65,7 +65,7 @@ class Persona:
 
             self.call_someone(call_params[0], call_params[1], call_params[2])
             try:
-                yield self.env.timeout(random.randint(self.min_interval_tel, self.max_interval_tel) + call_params[1])
+                yield self.env.timeout(int(random.randint(self.min_interval_tel**2, self.max_interval_tel**2)**0.5) + call_params[1])
             except simpy.Interrupt as interrupt:
                 print(CRED + "Sono stato interrotto da qualcosa che non doveva interrompermi!" + CEND)
 

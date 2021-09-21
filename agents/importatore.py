@@ -69,7 +69,7 @@ class Importatore:
     def run(self):
         while True:
             state = self.agentHandler.get_state()
-            interval = random.randint(self.min_interval_tel, self.max_interval_tel)
+            interval = int(random.randint(self.min_interval_tel**2, self.max_interval_tel**2)**0.5)
             if state == States.TRATTATIVA:
                 yield from self.call_a_esportatore()
             elif state == States.NULLO:
@@ -100,7 +100,7 @@ class Importatore:
 
                 elif cause in causes2:
 
-                    waiting = random.randint(self.min_interval_tel, self.max_interval_tel)
+                    waiting = int(random.randint(self.min_interval_tel**2, self.max_interval_tel**2)**0.5)
                     camionista = self.agentHandler.get_agent_by_id(id)
                     yield self.env.timeout(waiting)
 

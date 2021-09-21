@@ -49,7 +49,7 @@ class Esportatore:
                 self.call_someone(call_params[0], call_params[1], call_params[2])
                 yield self.env.timeout(call_params[1])
             try:
-                yield self.env.timeout(random.randint(self.min_interval_tel, self.max_interval_tel))
+                yield self.env.timeout(int(random.randint(self.min_interval_tel**2, self.max_interval_tel**2)**0.5))
             except simpy.Interrupt as interrupt:
                 cause = ''.join(x for x in str(interrupt.cause) if not x.isdigit())
                 id = ''.join(x for x in str(interrupt.cause) if x.isdigit())

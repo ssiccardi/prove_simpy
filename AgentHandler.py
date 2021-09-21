@@ -218,12 +218,14 @@ class AgentHandler:
 
     def handle_call(self, sender, receiver, is_chiamata, duration, timestamp):
         receiver_inter = "N" if (
-                (isinstance(receiver, Consumatore) and receiver.is_controllato()) or isinstance(receiver,
-                                                                                                Camionista) or isinstance(
-            receiver, Esportatore) or isinstance(receiver, Persona)) else "S"
-        sender_inter = "N" if ((isinstance(sender, Consumatore) and sender.is_controllato()) or isinstance(sender,
-                                                                                                           Camionista) or isinstance(
-            sender, Esportatore) or isinstance(receiver, Persona)) else "S"
+                (isinstance(receiver, Consumatore) and receiver.is_controllato()) or
+                isinstance(receiver,Camionista) or isinstance(receiver, Esportatore) or
+                isinstance(receiver, Persona)) else "S"
+
+        sender_inter = "N" if ((isinstance(sender, Consumatore) and sender.is_controllato()) or
+                               isinstance(sender,Camionista) or isinstance(sender, Esportatore) or
+                               isinstance(sender, Persona)) else "S"
+
         if sender_inter == "N" and receiver_inter == "N":
             return
         # print(receiver)

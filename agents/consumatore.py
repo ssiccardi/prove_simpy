@@ -64,6 +64,6 @@ class Consumatore:
             self.agentHandler.register_log(self.env.now, f"Consumatore con id {self.get_id()} ha acquistato da {call_params[2].get_id()}")
 
             try:
-                yield self.env.timeout(random.randint(self.min_interval_tel, self.max_interval_tel))
+                yield self.env.timeout(int(random.randint(self.min_interval_tel**2, self.max_interval_tel**2)**0.5))
             except simpy.Interrupt as interrupt:
                 print(CRED + "Sono stato interrotto da qualcosa che non doveva interrompermi!" + CEND)
