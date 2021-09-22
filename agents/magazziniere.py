@@ -20,17 +20,24 @@ class Magazziniere:
         self.waiting_time_to_move = 0
 
     def doIKnowPersonX(self, id):
+        found = false
         result = list(filter(lambda x: x.get_id() == id, self.importatori))
-        result.append(list(filter(lambda x: x.get_id() == id, self.spacciatori)))
-        result.append(list(filter(lambda x: x.get_id() == id, self.persone)))
+        if len(result) != 0:
+            return self.id
+        result = list(filter(lambda x: x.get_id() == id, self.spacciatori))
+        if len(result) != 0:
+            return self.id
+        result = list(filter(lambda x: x.get_id() == id, self.persone))
+        if len(result) != 0:
+            return self.id
 
-        return self.id if len(result) != 0 else -1
+        return -1
 
     def __str__(self) -> str:
         return f"Sono un Magazziniere con ID={self.id}\n" \
-               f"   Importatori: {[agent.get_id() for agent in self.importatori]}\n" \
-               f"   Spacciatori: {[agent.get_id() for agent in self.spacciatori]}\n" \
-               f"   Persone Generiche: {[agent.get_id() for agent in self.persone]}\n" \
+               f"   Importatori: {[agent.get_id() for agent in self.importatori] if len(self.importatori) > 0 else -1}\n" \
+               f"   Spacciatori: {[agent.get_id() for agent in self.spacciatori] if len(self.spacciatori) > 0 else -1}\n" \
+               f"   Persone Generiche: {[agent.get_id() for agent in self.persone] if len(self.persone) > 0 else -1}\n" \
                f"   Ho {self.qtadroga} droga tenuta nella cella {self.celladroga}\n" \
                f"   E mi trovo nella cella {self.cella}\n"
 

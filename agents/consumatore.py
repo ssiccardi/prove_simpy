@@ -1,6 +1,7 @@
 import random
 import simpy
 
+#TODO fare sì che in parte controllati camionisti e co no consumatoe (70%)
 
 class Consumatore:
 
@@ -12,16 +13,20 @@ class Consumatore:
         self.cella = random.randint(0, 7)
         self.agentHandler=agentHandler
 
-    def doIKnowPersonX(self, id):
-        result = list(filter(lambda x: x.get_id() == id, self.persone))
-        result.append(list(filter(lambda x: x.get_id() == id, [self.spacciatore])))
+    def get_spacciatore(self):
+        return self.spacciatore.get_id()
+
+    def doIKnowPersonX(self, idd):
+        result = list(filter(lambda x: x.get_id() == idd, self.persone))
+        if self.spacciatore.get_id() == idd:
+            result.append(self.spacciatore)
 
         return self.id if len(result) != 0 else -1
 
     def __str__(self) -> str:
         return f"Sono un Consumatore con ID={self.id}\n" \
-               f"   Spacciatore: {self.spacciatore.get_id()}\n" \
-               f"   Persone generiche: {[agent.get_id() for agent in self.persone]}\n" \
+               f"   Spacciatore: {self.spacciatore.get_id() if self.spacciatore is not None else -1}\n" \
+               f"   Persone generiche: {[agent.get_id() for agent in self.persone]if len(self.persone) > 0 else -1}\n" \
                f"   Sono controllato: {self.controllato}\n" \
                f"   E mi trovo nella cella {self.cella}\n"
 

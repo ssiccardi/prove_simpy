@@ -11,15 +11,20 @@ class Camionista:
         self.magazzinieri = []
         self.cella = random.randint(0, 7)
         self.agentHandler = agentHandler
+        self.controllato = bool(random.randint(0, 6))
         self.last_moved = 0
         self.waiting_time_to_move = 0
         self.qtadroga = random.randint(1, 3)
 
+
+    def is_controllato(self):
+        return self.controllato
+
     def __str__(self) -> str:
         return f"Sono un Camionista con ID={self.id}\n" \
-               f"   Importatori: {[agent.get_id() for agent in self.importatori]}\n" \
-               f"   Esportatori: {[agent.get_id() for agent in self.esportatori]}\n" \
-               f"   Magazzinieri: {[agent.get_id() for agent in self.magazzinieri]}\n" \
+               f"   Importatori: {[agent.get_id() for agent in self.importatori] if len(self.importatori) > 0 else -1}\n" \
+               f"   Esportatori: {[agent.get_id() for agent in self.esportatori] if len(self.esportatori) > 0 else -1}\n" \
+               f"   Magazzinieri: {[agent.get_id() for agent in self.magazzinieri] if len(self.magazzinieri) > 0 else -1}\n" \
                f"   E mi trovo nella cella {self.cella}\n"
 
     def enter_simulation_environment(self, importatori, esportatori, magazzinieri):
@@ -66,10 +71,16 @@ class Camionista:
 
     def doIKnowPersonX(self, id):
         result = list(filter(lambda x: x.get_id() == id, self.importatori))
-        result.append(list(filter(lambda x: x.get_id() == id, self.esportatori)))
-        result.append(list(filter(lambda x: x.get_id() == id, self.magazzinieri)))
+        if len(result) != 0:
+            return self.id
+        result = list(filter(lambda x: x.get_id() == id, self.esportatori))
+        if len(result) != 0:
+            return self.id
+        result = list(filter(lambda x: x.get_id() == id, self.magazzinieri))
+        if len(result) != 0:
+            return self.id
 
-        return self.id if len(result) != 0 else -1
+        return -1
 
     def change_cella(self):
         self.waiting_time_to_move=random.randint(self.min_spostamento, self.max_spostamento)

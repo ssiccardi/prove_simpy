@@ -109,17 +109,13 @@ class AgentHandler:
 
         for spacciatore in self.spacciatori:
             spacciatore_id = spacciatore.get_id()
-            magazzinieri_per = list(filter(lambda x: x != -1,
-                                           [agent.doIKnowPersonX(spacciatore_id) for agent in
-                                            self.magazzinieri]))
-            magazzinieri = list(filter(lambda agent: agent.get_id() in magazzinieri_per, self.magazzinieri))
 
-            consumatori_per = list(filter(lambda x: x != -1,
-                                          [agent.doIKnowPersonX(spacciatore_id) for agent in
-                                           self.consumatori]))
-            consumatori = list(filter(lambda agent: agent.get_id() in consumatori_per, self.consumatori))
 
-            spacciatore.enter_simulation_environment(magazzinieri,
+            magazzinieri = list(filter(lambda agent: agent.get_id() in magazzinieri_per, list(filter(lambda x: x != -1, [agent.doIKnowPersonX(spacciatore_id) for agent in self.magazzinieri]))))
+
+            consumatori = [self.get_agent_by_id(tupla[0]) for tupla in list(filter(lambda x: x[1] == spacciatore_id , [ (agent.get_id(), agent.get_spacciatore()) for agent in self.consumatori]))]
+
+            spacciatore.enter_simulation_environment(magazzinieri[0] if len(magazzinieri)>0 else None,
                                                      consumatori,
                                                      random.sample(self.persone, k=4))
 
@@ -179,12 +175,21 @@ class AgentHandler:
 
         env.run(until=duration)
 
-        df = pd.DataFrame(self.dataset, columns=["timestamp", "mittente", "mittente_interc", "destinatario",
-                                                 "destinatario_interc", "durata", "tipo"])
+        df = pd.DataFrame(self.dataset, columns=["timestamp", "mittente", "is_mittente_intercettato", "destinatario",
+                                                 "is_destinatario_intercettato", "durata", "tipo"])
+        df["esito_chiamata"]=1
+        df.sort_values(by=["timestamp"], inplace=True)
         df.to_csv("tabulato.csv", index=False)
 
         df = pd.DataFrame(self.log, columns=["timestamp", "evento"])
+        df.sort_values(by=["timestamp"], inplace=True)
         df.to_csv("log.csv", index=False)
+
+        ids = [ (type(agent).__name__, agent.get_id()) for agent in self.camionisti + self.consumatori + self.esportatori + self.importatori + self.magazzinieri + self.persone + self.spacciatori]
+
+        df = pd.DataFrame(ids, columns=["tipo", "id"])
+        df.sort_values(by=["id"], inplace=True)
+        df.to_csv("agents_id.csv", index=False)
 
         text_file = open("agents.txt", "w")
         n = text_file.write(str(self))
@@ -218,20 +223,21 @@ class AgentHandler:
 
     def handle_call(self, sender, receiver, is_chiamata, duration, timestamp):
         receiver_inter = "N" if (
-                (isinstance(receiver, Consumatore) and receiver.is_controllato()) or
-                isinstance(receiver,Camionista) or isinstance(receiver, Esportatore) or
+                (isinstance(receiver, Consumatore) and not(receiver.is_controllato())) or
+                (isinstance(receiver, Camionista) and not (receiver.is_controllato())) or
+                (isinstance(receiver, Esportatore) and not (receiver.is_controllato())) or
                 isinstance(receiver, Persona)) else "S"
 
-        sender_inter = "N" if ((isinstance(sender, Consumatore) and sender.is_controllato()) or
-                               isinstance(sender,Camionista) or isinstance(sender, Esportatore) or
+        sender_inter = "N" if ((isinstance(sender, Consumatore) and not(sender.is_controllato())) or
+                               (isinstance(sender, Camionista) and not(sender.is_controllato())) or
+                               (isinstance(sender, Esportatore) and not(sender.is_controllato())) or
                                isinstance(sender, Persona)) else "S"
 
         if sender_inter == "N" and receiver_inter == "N":
             return
         # print(receiver)
-
-        if isinstance(receiver, list):  # TODO: CAPIRE L'ERRORE
-            return
+        #if isinstance(receiver, list):  # TODO: CAPIRE L'ERRORE
+        #    return
         if sender.get_id() == receiver.get_id():
             return
 
@@ -294,6 +300,8 @@ class AgentHandler:
                 random_receiver_type = random.randint(0, len(list_of_receivers) - 1)
 
             receiver = random.choice(list_of_receivers[random_receiver_type])
+            if isinstance(receiver, list):
+                print( list_of_receivers,"\n" , receiver)
         else:
             receiver = None
         return is_chiamata, self.get_random_tel_duration() if is_chiamata else 0, receiver

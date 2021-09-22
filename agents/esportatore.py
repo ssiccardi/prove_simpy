@@ -13,11 +13,15 @@ class Esportatore:
         self.importatori = []
         self.cella = random.randint(0, 7)
         self.agentHandler = agentHandler
+        self.controllato = bool(random.randint(0, 6))
+
+    def is_controllato(self):
+        return self.controllato
 
     def __str__(self) -> str:
         return f"Sono un Esportatore con ID={self.id}\n" \
-               f"   Camionisti: {[agent.get_id() for agent in self.camionisti]}\n" \
-               f"   Importatori: {[agent.get_id() for agent in self.importatori]}\n" \
+               f"   Camionisti: {[agent.get_id() for agent in self.camionisti] if len(self.camionisti) > 0 else -1}\n" \
+               f"   Importatori: {[agent.get_id() for agent in self.importatori] if len(self.importatori) > 0 else -1}\n" \
                f"   E mi trovo nella cella {self.cella}\n"
 
     def enter_simulation_environment(self, camionisti, importatori):
@@ -64,6 +68,10 @@ class Esportatore:
 
     def doIKnowPersonX(self, id):
         result = list(filter(lambda x: x.get_id() == id, self.camionisti))
-        result.append(list(filter(lambda x: x.get_id() == id, self.importatori)))
+        if len(result) != 0:
+            return self.id
+        result=list(filter(lambda x: x.get_id() == id, self.importatori))
+        if len(result) != 0:
+            return self.id
 
-        return self.id if len(result) != 0 else -1
+        return -1

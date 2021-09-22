@@ -25,11 +25,11 @@ class Importatore:
 
     def __str__(self) -> str:
         return f"Sono un Importatore con ID={self.id}\n" \
-               f"   Importatori: {[agent.get_id() for agent in self.importatori]}\n" \
-               f"   Esportatori: {[agent.get_id() for agent in self.esportatori]}\n" \
-               f"   Magazzinieri: {[agent.get_id() for agent in self.magazzinieri]}\n" \
-               f"   Spacciatori: {[agent.get_id() for agent in self.spacciatori]}\n" \
-               f"   Persone generiche: {[agent.get_id() for agent in self.persone]}\n" \
+               f"   Importatori: {[agent.get_id() for agent in self.importatori] if len(self.importatori) > 0 else -1}\n" \
+               f"   Esportatori: {[agent.get_id() for agent in self.esportatori] if len(self.esportatori) > 0 else -1}\n" \
+               f"   Magazzinieri: {[agent.get_id() for agent in self.magazzinieri] if len(self.magazzinieri) > 0 else -1}\n" \
+               f"   Spacciatori: {[agent.get_id() for agent in self.spacciatori] if len(self.spacciatori) > 0 else -1}\n" \
+               f"   Persone generiche: {[agent.get_id() for agent in self.persone] if len(self.persone) > 0 else -1}\n" \
                f"   E mi trovo nella cella {self.cella}\n"
 
     def enter_simulation_environment(self, importatori, esportatori, spacciatori, magazzinieri, persone):
@@ -52,12 +52,22 @@ class Importatore:
 
     def doIKnowPersonX(self, id):
         result = list(filter(lambda x: x.get_id() == id, self.persone))
-        result.append(list(filter(lambda x: x.get_id() == id, self.esportatori)))
-        result.append(list(filter(lambda x: x.get_id() == id, self.spacciatori)))
-        result.append(list(filter(lambda x: x.get_id() == id, self.magazzinieri)))
-        result.append(list(filter(lambda x: x.get_id() == id, self.importatori)))
+        if len(result) != 0:
+            return self.id
+        result=list(filter(lambda x: x.get_id() == id, self.esportatori))
+        if len(result) != 0:
+            return self.id
+        result=list(filter(lambda x: x.get_id() == id, self.spacciatori))
+        if len(result) != 0:
+            return self.id
+        result=list(filter(lambda x: x.get_id() == id, self.magazzinieri))
+        if len(result) != 0:
+            return self.id
+        result=list(filter(lambda x: x.get_id() == id, self.importatori))
+        if len(result) != 0:
+            return self.id
 
-        return self.id if len(result) != 0 else -1
+        return -1
 
     def get_id(self):
         return self.id

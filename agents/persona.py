@@ -17,10 +17,10 @@ class Persona:
 
     def __str__(self) -> str:
         return f"Sono una Persona Generica con ID={self.id}\n" \
-               f"   Importatori: {[agent.get_id() for agent in self.importatori]}\n" \
-               f"   Spacciatori: {[agent.get_id() for agent in self.spacciatori]}\n" \
-               f"   Magazzinieri: {[agent.get_id() for agent in self.magazzinieri]}\n" \
-               f"   Consumatori Controllati: {[agent.get_id() for agent in self.consumatoreControllato]}\n" \
+               f"   Importatori: {[agent.get_id() for agent in self.importatori] if len(self.importatori) > 0 else -1}\n" \
+               f"   Spacciatori: {[agent.get_id() for agent in self.spacciatori] if len(self.spacciatori) > 0 else -1}\n" \
+               f"   Magazzinieri: {[agent.get_id() for agent in self.magazzinieri] if len(self.magazzinieri) > 0 else -1}\n" \
+               f"   Consumatori Controllati: {[agent.get_id() for agent in self.consumatoreControllato] if len(self.consumatoreControllato) > 0 else -1}\n" \
                f"   E mi trovo nella cella {self.cella}\n"
 
     def enter_simulation_environment(self, importatori, spacciatori, magazzinieri, consumatoreControllato):

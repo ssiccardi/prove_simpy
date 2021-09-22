@@ -18,15 +18,13 @@ class Spacciatore:
         self.min_droga = 1
 
     def __str__(self) -> str:
-        try:
             return f"Sono uno Spacciatore con ID={self.get_id()}\n" \
-               f"   Magazziniere: {self.magazziniere.get_id()}\n" \
-               f"   Consumatori: {[agent.get_id() for agent in self.consumatori]}\n" \
-               f"   Persone: {[agent.get_id() for agent in self.persone]}\n" \
+               f"   Magazziniere: {self.magazziniere.get_id() if self.magazziniere is not None else -1 }\n" \
+               f"   Consumatori: {[agent.get_id() for agent in self.consumatori] if len(self.consumatori) > 0 else -1}\n" \
+               f"   Persone: {[agent.get_id() for agent in self.persone] if len(self.persone) > 0 else -1}\n" \
                f"   Ho {self.qtadroga} di droga\n" \
                f"   E mi trovo nella cella {self.cella}\n"
-        except:
-            return ""
+
 
 
     def enter_simulation_environment(self, magazziniere, consumatori, persone):
@@ -51,14 +49,17 @@ class Spacciatore:
         self.action = env.process(self.run())
 
     def call_someone(self, is_chiamata, duration, receiver):
+        #print(type(self), type(receiver))
+
         self.agentHandler.handle_call(self, receiver, is_chiamata, duration, self.env.now)
 
     def run(self):
         while True:
             state = self.agentHandler.get_state()
-
-            call_params = self.agentHandler.get_call_param(
-                [[self.magazziniere], self.consumatori, self.persone])
+            if self.magazziniere != None:
+                call_params = self.agentHandler.get_call_param(
+                    [[self.magazziniere], self.consumatori, self.persone])
+            else: call_params = self.agentHandler.get_call_param([self.consumatori, self.persone])
             self.call_someone(call_params[0], call_params[1], call_params[2])
 
             try:
