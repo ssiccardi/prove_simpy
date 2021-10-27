@@ -1,9 +1,3 @@
----
-author:
-- Margherita Pindaro
-date: October 2021
-title: Documentazione Generatore Tabulati
----
 
 Introduzione
 ============
